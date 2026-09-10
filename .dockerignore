@@ -1,0 +1,18 @@
+# Only source and dependency manifests belong in the runtime image.
+**
+!pyproject.toml
+!uv.lock
+!mcp_servers/
+mcp_servers/**
+!mcp_servers/*.py
+!mcp_servers/Dockerfile
+!guardrails/
+guardrails/**
+!guardrails/*.py
+!guardrails/proto/
+guardrails/proto/**
+!guardrails/proto/*.py
+!guardrails/proto/LICENSE
+!scripts/
+scripts/**
+!scripts/setup_backend_auth.py

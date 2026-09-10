@@ -1,0 +1,2117 @@
+{
+  "uid": "mcp-gateway",
+  "title": "MCP Gateway \u00b7 Access & Usage",
+  "description": "Gateway request telemetry: access failures, guardrails, popular tools and latency. Live local demo observations.",
+  "schemaVersion": 41,
+  "version": 2,
+  "editable": false,
+  "refresh": "5s",
+  "time": {
+    "from": "now-15m",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "tags": [
+    "MCP",
+    "OpenTelemetry"
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "title": "Tool calls observed",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Cumulative gateway tool-call attempts since the collector started; each request counts once.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\"})) or vector(0)",
+          "legendFormat": "Calls",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Successful tool calls",
+      "type": "stat",
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "HTTP-successful tool calls excluding ExtMCP guardrail rejections. Other application-level errors inside HTTP 200 are not distinguished.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=\"ok\"})) or vector(0)",
+          "legendFormat": "Successes",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Authentication failures \u00b7 401",
+      "type": "stat",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Missing or invalid bearer credentials rejected by the gateway, since collector start.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",access_outcome=\"unauthenticated\"})) or vector(0)",
+          "legendFormat": "Rejected",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "red"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Hidden / unknown tool attempts",
+      "type": "stat",
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "HTTP 400 with Unknown tool. In the Alice demo this is the hidden Math tool; an arbitrary unknown name is not proof of a policy denial.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=\"hidden_or_unknown_tool\"})) or vector(0)",
+          "legendFormat": "Rejected",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 5,
+      "title": "Most used tools \u00b7 successful calls",
+      "type": "bargauge",
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Cumulative successful calls since collector start. Each demo target has exactly one tool; Collector maps target to its known tool name.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sort_desc(sum by (demo_tool) (traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=\"ok\"}))",
+          "legendFormat": "{{demo_tool}}",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "showUnfilled": true,
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 6,
+      "title": "Access outcomes \u00b7 all MCP requests",
+      "type": "piechart",
+      "gridPos": {
+        "x": 12,
+        "y": 4,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Cumulative outcomes for all /mcp requests since collector start, including initialize/discovery. HTTP 401 = authentication, 403 = authorization, unknown/hidden is separate.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (access_outcome) (traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",access_outcome!=\"\"})",
+          "legendFormat": "{{access_outcome}}",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "pieType": "donut",
+        "displayLabels": [
+          "percent"
+        ],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "values": [
+            "value",
+            "percent"
+          ]
+        },
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Tool traffic \u00b7 calls per minute",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Rolling rate of gateway tool-call attempts. Selected time range applies. Exemplars link to individual traces.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (demo_tool) (rate(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\"}[$__rate_interval])) * 60",
+          "legendFormat": "{{demo_tool}}",
+          "instant": false,
+          "range": true,
+          "exemplar": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 8,
+      "title": "Access failures over time",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (access_outcome) (rate(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",access_outcome=~\"unauthenticated|forbidden|hidden_or_unknown_tool|guardrail_blocked|guardrail_error\"}[$__rate_interval])) * 60",
+          "legendFormat": "{{access_outcome}}",
+          "instant": false,
+          "range": true,
+          "exemplar": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "cpm",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 9,
+      "title": "Tool latency \u00b7 p95",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Estimated p95 from histogram buckets for successful gateway tool calls. Includes gateway and upstream round trip, not client/network time before gateway.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "histogram_quantile(0.95, sum by (le,demo_tool) (rate(traces_span_metrics_duration_milliseconds_bucket{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=\"ok\"}[$__rate_interval])))",
+          "legendFormat": "{{demo_tool}}",
+          "instant": false,
+          "range": true,
+          "exemplar": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "title": "Tool success rate",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 20,
+        "w": 12,
+        "h": 8
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "HTTP success excluding guardrail rejections / all tool-call attempts. No traffic means no percentage, not 100%.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "100 * sum by (demo_tool) (rate(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=\"ok\"}[$__rate_interval])) / sum by (demo_tool) (rate(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\"}[$__rate_interval]))",
+          "legendFormat": "{{demo_tool}}",
+          "instant": false,
+          "range": true,
+          "exemplar": true
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      }
+    },
+    {
+      "id": 11,
+      "title": "Guardrail rejections",
+      "type": "stat",
+      "gridPos": {
+        "x": 0,
+        "y": 28,
+        "w": 6,
+        "h": 5
+      },
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "description": "Content policy denials and fail-closed policy errors since Collector start. These JSON-RPC errors can use HTTP 200; they are excluded from successful calls. Successful output redactions remain successful calls; inspect policy logs for redactions.",
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "(sum(traces_span_metrics_calls_total{service_name=\"agentgateway\",span_kind=\"SPAN_KIND_SERVER\",http_path=\"/mcp\",mcp_method_name=\"tools/call\",access_outcome=~\"guardrail_blocked|guardrail_error\"})) or vector(0)",
+          "legendFormat": "Blocked",
+          "instant": true,
+          "range": false,
+          "exemplar": false
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "never"
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ok"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Successful"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "green"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "unauthenticated"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Authentication failed"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hidden_or_unknown_tool"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Hidden / unknown tool"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "forbidden"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Forbidden"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_blocked"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail blocked"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guardrail_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Guardrail unavailable / error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "red"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "other_error"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Other error"
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "purple"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        }
+      }
+    },
+    {
+      "id": 12,
+      "type": "text",
+      "title": "Reading the telemetry",
+      "gridPos": {
+        "x": 6,
+        "y": 28,
+        "w": 18,
+        "h": 5
+      },
+      "options": {
+        "mode": "markdown",
+        "content": "**Counters and rankings:** observations since Collector start. **Time-series charts:** selected time range.\n\nCounts use gateway **SERVER** spans only; policy and upstream child spans do not count again. ExtMCP rejections are identified from gateway error spans even with HTTP 200. Redacted responses remain successful. Other HTTP 200 application errors are not distinguished. Full sampling is enabled; latency percentiles are histogram estimates.\n\n[Explore requests](http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1) \u00b7 [Guardrail rejections](http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%26%26+%28span.access.outcome+%3D+%5C%22guardrail_blocked%5C%22+%7C%7C+span.access.outcome+%3D+%5C%22guardrail_error%5C%22%29+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1)"
+      }
+    }
+  ],
+  "links": [
+    {
+      "title": "Explore traces",
+      "url": "http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1"
+    },
+    {
+      "title": "Authentication failures",
+      "url": "http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%26%26+span.http.status+%3D+401+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1"
+    },
+    {
+      "title": "Hidden tool attempts",
+      "url": "http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%26%26+span.access.outcome+%3D+%5C%22hidden_or_unknown_tool%5C%22+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1"
+    },
+    {
+      "title": "Guardrail rejections",
+      "url": "http://localhost:3001/explore?schemaVersion=1&panes=%7B%22trace%22%3A%7B%22datasource%22%3A%22tempo%22%2C%22queries%22%3A%5B%7B%22refId%22%3A%22A%22%2C%22datasource%22%3A%7B%22type%22%3A%22tempo%22%2C%22uid%22%3A%22tempo%22%7D%2C%22queryType%22%3A%22traceql%22%2C%22query%22%3A%22%7B+resource.service.name+%3D+%5C%22agentgateway%5C%22+%26%26+%28span.access.outcome+%3D+%5C%22guardrail_blocked%5C%22+%7C%7C+span.access.outcome+%3D+%5C%22guardrail_error%5C%22%29+%7D%22%2C%22limit%22%3A20%2C%22tableType%22%3A%22traces%22%2C%22filters%22%3A%5B%5D%7D%5D%2C%22range%22%3A%7B%22from%22%3A%22now-1h%22%2C%22to%22%3A%22now%22%7D%7D%7D&orgId=1"
+    }
+  ]
+}

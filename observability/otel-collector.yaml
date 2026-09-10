@@ -1,0 +1,79 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 128
+    spike_limit_mib: 32
+  attributes/privacy:
+    actions:
+      - key: mcp.session.id
+        action: delete
+      - key: jwt.sub
+        action: delete
+  transform/outcomes:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - set(attributes["access.outcome"], "ok") where attributes["http.status"] != nil and attributes["http.status"] < 400
+          - set(attributes["access.outcome"], "other_error") where attributes["http.status"] != nil and attributes["http.status"] >= 400
+          - set(attributes["access.outcome"], "unauthenticated") where attributes["http.status"] == 401
+          - set(attributes["access.outcome"], "forbidden") where attributes["http.status"] == 403
+          # Hidden tools deliberately look unknown. Do not label every 400 as authorization failure.
+          - set(attributes["access.outcome"], "hidden_or_unknown_tool") where attributes["http.status"] == 400 and IsMatch(status.message, "Unknown tool")
+          # ExtMCP returns JSON-RPC errors over HTTP 200. Override HTTP success.
+          - set(attributes["access.outcome"], "guardrail_error") where status.message != nil and IsMatch(status.message, "mcpGuardrails")
+          - >-
+            set(attributes["access.outcome"], "guardrail_blocked") where status.message != nil and IsMatch(status.message, "mcpGuardrails rejected: Guardrail")
+          - set(attributes["demo.tool"], "hello_world") where attributes["mcp.method.name"] == "tools/call" and attributes["mcp.target"] == "hello"
+          - set(attributes["demo.tool"], "add_numbers") where attributes["mcp.method.name"] == "tools/call" and attributes["mcp.target"] == "math"
+          - set(attributes["demo.tool"], "utc_time") where attributes["mcp.method.name"] == "tools/call" and attributes["mcp.target"] == "time"
+  batch:
+    timeout: 1s
+    send_batch_size: 512
+connectors:
+  spanmetrics:
+    namespace: traces.span.metrics
+    histogram:
+      unit: ms
+      explicit:
+        buckets: [100us, 250us, 500us, 1ms, 2ms, 5ms, 10ms, 25ms, 50ms, 100ms, 250ms, 500ms, 1s, 2s]
+    dimensions:
+      - name: http.status
+      - name: http.path
+      - name: mcp.method.name
+      - name: mcp.target
+      - name: demo.tool
+      - name: access.outcome
+    exemplars:
+      enabled: true
+    metrics_flush_interval: 5s
+    aggregation_cardinality_limit: 2000
+exporters:
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    enable_open_metrics: true
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+    sending_queue:
+      enabled: true
+      queue_size: 1024
+    retry_on_failure:
+      enabled: true
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, attributes/privacy, transform/outcomes, batch]
+      exporters: [otlp/tempo, spanmetrics]
+    metrics:
+      receivers: [spanmetrics]
+      exporters: [prometheus]

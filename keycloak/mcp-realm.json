@@ -1,0 +1,97 @@
+{
+  "realm": "mcp",
+  "enabled": true,
+  "sslRequired": "NONE",
+  "displayName": "MCP Governance Demo",
+  "registrationAllowed": false,
+  "roles": {
+    "realm": [
+      {
+        "name": "mcp-user",
+        "description": "Can use the public MCP tools"
+      },
+      {
+        "name": "mcp-admin",
+        "description": "Can use the admin-only MCP tools"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "agentgateway",
+      "name": "Agentgateway MCP demo client",
+      "description": "Public PKCE client used by the local MCP demo",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "http://keycloak.localhost:*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://keycloak.localhost:8080"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "agentgateway-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "agentgateway",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "alice",
+      "enabled": true,
+      "email": "alice@example.com",
+      "emailVerified": true,
+      "firstName": "Alice",
+      "lastName": "Analyst",
+      "realmRoles": [
+        "mcp-user"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "alice-demo-password",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "bob",
+      "enabled": true,
+      "email": "bob@example.com",
+      "emailVerified": true,
+      "firstName": "Bob",
+      "lastName": "Builder",
+      "realmRoles": [
+        "mcp-user",
+        "mcp-admin"
+      ],
+      "credentials": [
+        {
+          "type": "password",
+          "value": "bob-demo-password",
+          "temporary": false
+        }
+      ]
+    }
+  ]
+}

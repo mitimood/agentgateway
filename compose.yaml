@@ -1,0 +1,200 @@
+name: agentgateway-mcp-demo
+
+x-python-image: &python-image
+  build:
+    context: .
+    dockerfile: mcp_servers/Dockerfile
+
+x-mcp-server: &mcp-server
+  <<: *python-image
+  restart: unless-stopped
+  depends_on:
+    backend-auth-init:
+      condition: service_completed_successfully
+  expose:
+    - "8000"
+  volumes:
+    - gateway-public-key:/run/secrets:ro
+  healthcheck:
+    test:
+      - CMD
+      - python
+      - -c
+      - >-
+        import urllib.request;
+        urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)
+    interval: 5s
+    timeout: 3s
+    retries: 12
+    start_period: 2s
+
+services:
+  guardrails:
+    <<: *python-image
+    restart: unless-stopped
+    entrypoint: ["/app/.venv/bin/python", "-m", "guardrails.server"]
+    networks: [guardrails-backend]
+    expose:
+      - "9001"
+    healthcheck:
+      test: ["CMD", "/app/.venv/bin/python", "-m", "guardrails.healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  backend-auth-init:
+    <<: *python-image
+    restart: "no"
+    network_mode: none
+    entrypoint: ["/app/.venv/bin/python", "/app/scripts/setup_backend_auth.py"]
+    command: ["--gateway-uid", "65532"]
+    volumes:
+      - gateway-private-key:/run/keys/private
+      - gateway-public-key:/run/keys/public
+
+  tempo:
+    image: grafana/tempo:2.8.2
+    restart: unless-stopped
+    command: ["-config.file=/etc/tempo.yaml"]
+    volumes:
+      - ./observability/tempo.yaml:/etc/tempo.yaml:ro
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d", "--web.enable-remote-write-receiver", "--enable-feature=exemplar-storage"]
+    volumes:
+      - ./observability/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "127.0.0.1:9091:9090"
+
+  grafana:
+    image: grafana/grafana:12.1.1
+    restart: unless-stopped
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # Permit Explore for local viewers without allowing saved dashboard edits.
+      GF_USERS_VIEWERS_CAN_EDIT: "true"
+      GF_USERS_DEFAULT_THEME: dark
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/gateway.json
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.135.0
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports:
+      - "127.0.0.1:4318:4318"
+    volumes:
+      - ./observability/otel-collector.yaml:/etc/otelcol/config.yaml:ro
+    depends_on:
+      tempo:
+        condition: service_started
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.1
+    restart: unless-stopped
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      # This hostname is usable by the host browser and by agentgateway.
+      KC_HOSTNAME: http://keycloak.localhost:8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HEALTH_ENABLED: "true"
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ./keycloak/mcp-realm.json:/opt/keycloak/data/import/mcp-realm.json:ro
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          { printf 'HEAD /health/ready HTTP/1.0\r\n\r\n' >&0;
+          grep 'HTTP/1.0 200'; } 0<>/dev/tcp/localhost/9000
+      interval: 5s
+      timeout: 3s
+      retries: 24
+      start_period: 15s
+
+  mcp-hello:
+    <<: *mcp-server
+    networks: [hello-backend]
+    environment:
+      MCP_SERVER_NAME: hello
+
+  mcp-math:
+    <<: *mcp-server
+    networks: [math-backend]
+    environment:
+      MCP_SERVER_NAME: math
+
+  mcp-time:
+    <<: *mcp-server
+    networks: [time-backend]
+    environment:
+      MCP_SERVER_NAME: time
+
+  agentgateway:
+    image: cr.agentgateway.dev/agentgateway:v1.5.0
+    networks: [default, hello-backend, math-backend, time-backend, guardrails-backend]
+    restart: unless-stopped
+    depends_on:
+      guardrails:
+        condition: service_healthy
+      backend-auth-init:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+      keycloak:
+        condition: service_healthy
+      mcp-hello:
+        condition: service_healthy
+      mcp-math:
+        condition: service_healthy
+      mcp-time:
+        condition: service_healthy
+    # The issuer must remain browser-visible as keycloak.localhost, but the
+    # gateway also has to resolve that same name back to the host-published
+    # Keycloak port while it proxies OAuth metadata from inside the container.
+    extra_hosts:
+      - "keycloak.localhost:host-gateway"
+    command: ["-f", "/config/config.yaml"]
+    # Keycloak's Compose alias makes this issuer resolve inside the network;
+    # *.localhost resolves to the host for the browser.
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./agentgateway/config.yaml:/config/config.yaml:ro
+      - gateway-private-key:/run/secrets:ro
+
+networks:
+  default: {}
+  guardrails-backend:
+    internal: true
+  hello-backend:
+    internal: true
+  math-backend:
+    internal: true
+  time-backend:
+    internal: true
+
+volumes:
+  gateway-private-key:
+  gateway-public-key:
+  prometheus-data:
+  grafana-data:

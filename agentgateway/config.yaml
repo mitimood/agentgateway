@@ -1,0 +1,121 @@
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+#
+# One federated MCP endpoint. Agentgateway prefixes target tool names by
+# default, so the three demo servers can safely expose different tools.
+
+config:
+  # Keep the unauthenticated admin/debug interface inside the container.
+  storage:
+    mode: readOnly
+  logging:
+    level: info
+  tracing:
+    otlpEndpoint: http://otel-collector:4317
+    otlpProtocol: grpc
+    # Capture every request in this local demo, including clients without context.
+    randomSampling: true
+    clientSampling: true
+
+gateways:
+  default:
+    port: 3000
+
+# The top-level MCP section is the simplified form of the same federated
+# backend. It also lets the playground enumerate the configured MCP servers.
+mcp:
+  gateways:
+    - default
+  policies:
+    cors:
+      allowOrigins:
+        - "*"
+      allowHeaders:
+        - "*"
+      exposeHeaders:
+        - Mcp-Session-Id
+    mcpAuthentication:
+      mode: strict
+      issuer: http://keycloak.localhost:8080/realms/mcp
+      audiences:
+        - agentgateway
+      # Use the Compose service for the internal key fetch. The issuer stays
+      # browser-visible so tokens and OAuth metadata share one public name.
+      jwks:
+        url: http://keycloak:8080/realms/mcp/protocol/openid-connect/certs
+      provider:
+        keycloak: {}
+      clientId: agentgateway
+      resourceMetadata:
+        resource: http://localhost:3000/mcp
+        scopesSupported:
+          - openid
+          - profile
+        bearerMethodsSupported:
+          - header
+    mcpAuthorization:
+      rules:
+        # Alice can use hello/time. Bob's mcp-admin role also unlocks math.
+        - 'mcp.tool.target != "math" || "mcp-admin" in jwt.realm_access.roles'
+    # Inspect the actual MCP arguments before forwarding and redact results.
+    # Role authorization continues to use the original tool and target.
+    mcpGuardrails:
+      processors:
+        - kind: remote
+          host: guardrails:9001
+          failureMode: failClosed
+          requestHeaders:
+            allowed: [content-type]
+          methods:
+            tools/call: full
+  targets:
+    - name: hello
+      mcp:
+        host: http://mcp-hello:8000/mcp
+      policies:
+        backendAuth:
+          jwtSign:
+            signingKey:
+              file: /run/secrets/gateway-private.pem
+            alg: RS256
+            ttl: 60s
+            claims:
+              iss: urn:agentgateway:backend
+              sub: agentgateway
+              aud: urn:mcp:hello
+              scope: mcp:invoke
+    - name: math
+      mcp:
+        host: http://mcp-math:8000/mcp
+      policies:
+        backendAuth:
+          jwtSign:
+            signingKey:
+              file: /run/secrets/gateway-private.pem
+            alg: RS256
+            ttl: 60s
+            claims:
+              iss: urn:agentgateway:backend
+              sub: agentgateway
+              aud: urn:mcp:math
+              scope: mcp:invoke
+    - name: time
+      mcp:
+        host: http://mcp-time:8000/mcp
+      policies:
+        backendAuth:
+          jwtSign:
+            signingKey:
+              file: /run/secrets/gateway-private.pem
+            alg: RS256
+            ttl: 60s
+            claims:
+              iss: urn:agentgateway:backend
+              sub: agentgateway
+              aud: urn:mcp:time
+              scope: mcp:invoke
+
+# The playground is useful for inspecting the three upstreams from a browser.
+# It is intentionally served on the same local gateway port as /mcp.
+ui:
+  gateways:
+    - default

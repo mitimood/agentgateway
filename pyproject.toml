@@ -1,0 +1,19 @@
+[project]
+name = "agentgateway-mcp-demo"
+version = "0.1.0"
+description = "Three small FastMCP servers for the local agentgateway demo"
+requires-python = ">=3.12"
+dependencies = [
+    "cryptography==50.0.1",
+    "fastmcp==4.0.3",
+    "grpcio==1.81.1",
+    "protobuf==6.33.5",
+]
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = [
+    "grpcio-tools==1.81.1",
+]
