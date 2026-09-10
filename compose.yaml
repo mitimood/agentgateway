@@ -30,6 +30,8 @@ x-mcp-server: &mcp-server
 
 services:
   guardrails:
+    container_name: mcp-demo-guardrails
+    image: agentgateway-demo/guardrails:local
     <<: *python-image
     restart: unless-stopped
     entrypoint: ["/app/.venv/bin/python", "-m", "guardrails.server"]
@@ -43,6 +45,8 @@ services:
       retries: 12
 
   backend-auth-init:
+    container_name: mcp-demo-backend-auth-init
+    image: agentgateway-demo/backend-auth-init:local
     <<: *python-image
     restart: "no"
     network_mode: none
@@ -53,6 +57,7 @@ services:
       - gateway-public-key:/run/keys/public
 
   tempo:
+    container_name: mcp-demo-tempo
     image: grafana/tempo:2.8.2
     restart: unless-stopped
     command: ["-config.file=/etc/tempo.yaml"]
@@ -60,6 +65,7 @@ services:
       - ./observability/tempo.yaml:/etc/tempo.yaml:ro
 
   prometheus:
+    container_name: mcp-demo-prometheus
     image: prom/prometheus:v3.5.0
     restart: unless-stopped
     command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=7d", "--web.enable-remote-write-receiver", "--enable-feature=exemplar-storage"]
@@ -70,6 +76,7 @@ services:
       - "127.0.0.1:9091:9090"
 
   grafana:
+    container_name: mcp-demo-grafana
     image: grafana/grafana:12.1.1
     restart: unless-stopped
     environment:
@@ -90,6 +97,7 @@ services:
       - grafana-data:/var/lib/grafana
 
   otel-collector:
+    container_name: mcp-demo-otel-collector
     image: otel/opentelemetry-collector-contrib:0.135.0
     restart: unless-stopped
     command: ["--config=/etc/otelcol/config.yaml"]
@@ -102,6 +110,7 @@ services:
         condition: service_started
 
   keycloak:
+    container_name: mcp-demo-keycloak
     image: quay.io/keycloak/keycloak:26.7.1
     restart: unless-stopped
     command: ["start-dev", "--import-realm"]
@@ -132,24 +141,31 @@ services:
       start_period: 15s
 
   mcp-hello:
+    container_name: mcp-demo-mcp-hello
+    image: agentgateway-demo/mcp-hello:local
     <<: *mcp-server
     networks: [hello-backend]
     environment:
       MCP_SERVER_NAME: hello
 
   mcp-math:
+    container_name: mcp-demo-mcp-math
+    image: agentgateway-demo/mcp-math:local
     <<: *mcp-server
     networks: [math-backend]
     environment:
       MCP_SERVER_NAME: math
 
   mcp-time:
+    container_name: mcp-demo-mcp-time
+    image: agentgateway-demo/mcp-time:local
     <<: *mcp-server
     networks: [time-backend]
     environment:
       MCP_SERVER_NAME: time
 
   agentgateway:
+    container_name: mcp-demo-agentgateway
     image: cr.agentgateway.dev/agentgateway:v1.5.0
     networks: [default, hello-backend, math-backend, time-backend, guardrails-backend]
     restart: unless-stopped
