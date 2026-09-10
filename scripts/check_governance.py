@@ -188,8 +188,8 @@ def exercise_user(username: str, password: str, expected_tool_suffixes: set[str]
 def main() -> int:
     try:
         wait_for_keycloak()
-        exercise_user("alice", "alice-demo-password", {"hello_world", "utc_time"})
-        exercise_user("bob", "bob-demo-password", {"hello_world", "add_numbers", "utc_time"})
+        exercise_user("alice", "alice", {"hello_world", "utc_time"})
+        exercise_user("bob", "bob", {"hello_world", "add_numbers", "utc_time"})
         print("OK: Keycloak authentication and role-based MCP authorization are working")
         return 0
     except (RuntimeError, KeyError, StopIteration, json.JSONDecodeError) as error:

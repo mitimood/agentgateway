@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def session(user):
-    token = g.get_token(user, f"{user}-demo-password")
+    token = g.get_token(user, user)
     status, response, sid = g.mcp_post({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
         "protocolVersion": "2025-06-18", "capabilities": {},
         "clientInfo": {"name": "guardrails-demo", "version": "1"}}}, token)

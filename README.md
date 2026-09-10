@@ -43,8 +43,8 @@ These credentials are intentionally simple and are only for this local sample:
 
 | User | Password | Realm roles | Visible tools |
 | --- | --- | --- | --- |
-| `alice` | `alice-demo-password` | `mcp-user` | `hello_world`, `utc_time` |
-| `bob` | `bob-demo-password` | `mcp-user`, `mcp-admin` | `hello_world`, `add_numbers`, `utc_time` |
+| `alice` | `alice` | `mcp-user` | `hello_world`, `utc_time` |
+| `bob` | `bob` | `mcp-user`, `mcp-admin` | `hello_world`, `add_numbers`, `utc_time` |
 
 The imported realm and client are in [`keycloak/mcp-realm.json`](keycloak/mcp-realm.json). `mcp-admin` unlocks the `math` target through the route-level MCP authorization rule.
 The realm also intentionally uses HTTP and `sslRequired: NONE` for local development. Do not reuse these credentials or expose this stack outside a trusted machine.

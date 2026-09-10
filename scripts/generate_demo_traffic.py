@@ -10,7 +10,7 @@ from trace_context import demo_trace, grafana_explore_url
 
 
 def session(user):
-    token = g.get_token(user,f'{user}-demo-password')
+    token = g.get_token(user, user)
     _,result,sid = g.mcp_post({'jsonrpc':'2.0','id':1,'method':'initialize','params':{'protocolVersion':'2025-06-18','capabilities':{},'clientInfo':{'name':'telemetry-demo','version':'1'}}},token)
     g.result_or_fail(result)
     if not sid: raise RuntimeError('Missing session')

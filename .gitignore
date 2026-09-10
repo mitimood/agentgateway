@@ -12,6 +12,7 @@ htmlcov/
 build/
 dist/
 node_modules
+desktop-extension/
 
 # Local secrets, credentials, and identity material (never share)
 .secrets/

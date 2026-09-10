@@ -57,7 +57,7 @@ def main():
             ("bob", {"hello_world", "add_numbers", "utc_time"}, "math", {200}),
         ]:
             with demo_trace(f"{user} governance workflow") as (trace_id, parent_id):
-                governance.exercise_user(user, f"{user}-demo-password", tools)
+                governance.exercise_user(user, user, tools)
             wait_for_trace(trace_id, parent_id, target, statuses)
         return 0
     except (RuntimeError, KeyError, StopIteration, json.JSONDecodeError) as error:

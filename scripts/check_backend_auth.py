@@ -81,7 +81,7 @@ def inspect(service):
 
 
 def main():
-    users = {name: get_token(name, f"{name}-demo-password") for name in ("alice", "bob")}
+    users = {name: get_token(name, name) for name in ("alice", "bob")}
     gateway = inspect("agentgateway")
     private_mount = next(m for m in gateway["Mounts"] if m["Destination"] == "/run/secrets")
     assert private_mount["Type"] == "volume" and not private_mount["RW"], "gateway key must be a read-only volume"
